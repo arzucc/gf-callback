@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestor Financiero</title>
+<!--
+  Página de retorno de Open Banking para Gestor Financiero.
+  Enable Banking solo redirige a direcciones https://, así que el banco vuelve aquí con
+  ?code=…&state=… y esta página se lo pasa a la app del Mac por su esquema propio
+  (gestorfinanciero://callback?code=…). No carga nada externo, no guarda nada y no envía
+  el código a ningún sitio: además, ese código no sirve sin la clave privada de la app.
+-->
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --muted: #6e6e73; --bg: #f5f5f7; --card: #fff; --accent: #0a66d8; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --muted: #a1a1a6; --bg: #1c1c1e; --card: #2c2c2e; --accent: #4c9bff; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 -apple-system, system-ui, sans-serif; }
+  main { max-width: 440px; margin: 12vh auto; padding: 28px 24px; background: var(--card); border-radius: 14px; text-align: center; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p { margin: 8px 0; color: var(--muted); }
+  .btn { display: inline-block; margin-top: 12px; padding: 10px 18px; border-radius: 10px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+  details { margin-top: 18px; text-align: left; }
+  input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 8px; font: 13px ui-monospace, monospace; }
+  button { padding: 6px 12px; }
+  .small { font-size: 13px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Volviendo a Gestor Financiero…</h1>
+  <p id="msg">Si el navegador pregunta, elige «Abrir Gestor Financiero».</p>
+  <a id="open" class="btn" href="#">Abrir Gestor Financiero</a>
+  <details id="manual">
+    <summary>¿No se abre la app?</summary>
+    <p>Copia esta dirección y pégala en la sección Banco de la app:</p>
+    <input id="url" readonly>
+    <button id="copy" type="button">Copiar</button>
+  </details>
+  <p class="small">Esta página no guarda ni envía nada: solo pasa la autorización a la app de tu Mac.</p>
+</main>
+<script>
+(function () {
+  var query = location.search;
+  var target = 'gestorfinanciero://callback' + query;
+  var open = document.getElementById('open');
+  var url = document.getElementById('url');
+  url.value = location.href;
+  document.getElementById('copy').onclick = function () {
+    url.select();
+    if (navigator.clipboard) { navigator.clipboard.writeText(url.value); }
+    this.textContent = 'Copiado';
+  };
+  if (query.indexOf('code=') === -1) {
+    document.getElementById('title').textContent = 'No hay nada que conectar';
+    document.getElementById('msg').textContent = query.indexOf('error=') !== -1
+      ? 'El banco no autorizó la conexión. Vuelve a la app e inténtalo de nuevo.'
+      : 'Esta página solo se usa al conectar un banco desde Gestor Financiero.';
+    open.style.display = 'none';
+    document.getElementById('manual').style.display = 'none';
+    return;
+  }
+  open.href = target;
+  // Quita el código de la barra de direcciones y del historial; queda solo en la casilla de copia.
+  history.replaceState(null, '', location.pathname);
+  location.href = target;
+})();
+</script>
+</body>
+</html>
